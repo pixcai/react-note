@@ -375,6 +375,9 @@ type Root = {
 };
 
 function ReactRoot(container: Container, isAsync: boolean, hydrate: boolean) {
+  // root是一个普通对象，其中
+  // root.current是一个FiberNode
+  // root.containerInfo是参数container
   const root = DOMRenderer.createContainer(container, isAsync, hydrate);
   this._internalRoot = root;
 }
@@ -384,11 +387,13 @@ ReactRoot.prototype.render = function(
 ): Work {
   const root = this._internalRoot;
   const work = new ReactWork();
+  // 参数中的callback是ReactDOM封装后的回调，不是在ReactDOM.render(element, callback)里的回调
   callback = callback === undefined ? null : callback;
   if (__DEV__) {
     warnOnInvalidCallback(callback, 'render');
   }
   if (callback !== null) {
+    // 将回调函数加入ReactWork的回调函数队列，在work._onCommit调用时依次执行
     work.then(callback);
   }
   DOMRenderer.updateContainer(children, root, null, work._onCommit);
@@ -476,6 +481,7 @@ function getReactRootElementInContainer(container: any) {
     return null;
   }
 
+  // 如果container是document对象，则返回<html>
   if (container.nodeType === DOCUMENT_NODE) {
     return container.documentElement;
   } else {
@@ -485,6 +491,8 @@ function getReactRootElementInContainer(container: any) {
 
 function shouldHydrateDueToLegacyHeuristic(container) {
   const rootElement = getReactRootElementInContainer(container);
+  // ROOT_ATTRIBUTE_NAME = 'data-reactroot'
+  // 新版本不再添加data-reactroot到根元素上，所以总是返回false
   return !!(
     rootElement &&
     rootElement.nodeType === ELEMENT_NODE &&
@@ -997,12 +1005,14 @@ function legacyCreateRootFromDOMContainer(
   container: DOMContainer,
   forceHydrate: boolean,
 ): Root {
+  // 浏览器端总是false，服务器端总是true
   const shouldHydrate =
     forceHydrate || shouldHydrateDueToLegacyHeuristic(container);
   // First clear any existing content.
   if (!shouldHydrate) {
     let warned = false;
     let rootSibling;
+    // 如果container里含有其它的element，则清空它
     while ((rootSibling = container.lastChild)) {
       if (__DEV__) {
         if (
@@ -1055,10 +1065,12 @@ function legacyRenderSubtreeIntoContainer(
     topLevelUpdateWarnings(container);
   }
 
+  // 第一次render时，container还没有_reactRootContainer属性，所以跳过if进入else
   // TODO: Without `any` type, Flow says "Property cannot be accessed on any
   // member of intersection type." Whyyyyyy.
   let root: Root = (container._reactRootContainer: any);
   if (!root) {
+    // 返回一个ReactRoot的实例
     // Initial mount
     root = container._reactRootContainer = legacyCreateRootFromDOMContainer(
       container,
@@ -1067,6 +1079,10 @@ function legacyRenderSubtreeIntoContainer(
     if (typeof callback === 'function') {
       const originalCallback = callback;
       callback = function() {
+        // root._internalRoot是一个普通对象，含有current字段
+        // getPublicRootInstance函数取其中的current(一个FiberNode实例)
+        // 如果current不是组件挂载时的根节点(根据current.tag判断)，返回null
+        // 否则，取current.child.stateNode, stateNode保存的是原生HTMLElement
         const instance = DOMRenderer.getPublicRootInstance(root._internalRoot);
         originalCallback.call(instance);
       };
@@ -1087,6 +1103,10 @@ function legacyRenderSubtreeIntoContainer(
     if (typeof callback === 'function') {
       const originalCallback = callback;
       callback = function() {
+        // root._internalRoot是一个普通对象，含有current字段
+        // getPublicRootInstance函数取其中的current(一个FiberNode实例)
+        // 如果current不是组件挂载时的根节点(根据current.tag判断)，返回null
+        // 否则，取current.child.stateNode, stateNode保存的是原生HTMLElement
         const instance = DOMRenderer.getPublicRootInstance(root._internalRoot);
         originalCallback.call(instance);
       };
@@ -1099,9 +1119,11 @@ function legacyRenderSubtreeIntoContainer(
         callback,
       );
     } else {
+      // 第一次执行ReactDOM.render时进入这里
       root.render(children, callback);
     }
   }
+  // 返回的是JSX组件经过渲染后的HTMLElement
   return DOMRenderer.getPublicRootInstance(root._internalRoot);
 }
 

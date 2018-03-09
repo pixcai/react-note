@@ -300,7 +300,9 @@ export function createWorkInProgress(
 }
 
 export function createHostRootFiber(isAsync): Fiber {
+  // AsyncMode = 1, StrictMode = 2, NoContext = 0
   const mode = isAsync ? AsyncMode | StrictMode : NoContext;
+  // HostRoot = 3
   return createFiber(HostRoot, null, null, mode);
 }
 

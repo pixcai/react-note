@@ -55,6 +55,7 @@ export function createFiberRoot(
   isAsync: boolean,
   hydrate: boolean,
 ): FiberRoot {
+  // uninitializedFiber是一个FiberNode的实例
   // Cyclic construction. This cheats the type system right now because
   // stateNode is any.
   const uninitializedFiber = createHostRootFiber(isAsync);

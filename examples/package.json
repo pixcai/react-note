@@ -1,0 +1,27 @@
+{
+  "name": "example",
+  "version": "1.0.0",
+  "description": "example",
+  "main": "src/index.js",
+  "scripts": {
+    "dev": "roadhog dev",
+    "test": "roadhog test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/facebook/react.git"
+  },
+  "keywords": [
+    "react",
+    "react-dom"
+  ],
+  "author": "pixcai",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/facebook/react/issues"
+  },
+  "homepage": "https://github.com/facebook/react#readme",
+  "dependencies": {
+    "roadhog": "^2.2.0"
+  }
+}

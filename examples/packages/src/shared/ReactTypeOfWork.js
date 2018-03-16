@@ -15,4 +15,5 @@ export type TypeOfWork =
   | 12
   | 13;
 
+export const HostRoot = 3;
 export const HostComponent = 5;

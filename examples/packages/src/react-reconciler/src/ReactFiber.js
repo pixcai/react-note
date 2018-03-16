@@ -7,6 +7,14 @@ import type {TypeOfSideEffect} from 'shared/ReactTypeOfSideEffect';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {UpdateQueue} from './ReactFiberUpdateQueue';
 
+import {NoEffect} from 'shared/ReactTypeOfSideEffect';
+import {
+  HostRoot,
+} from 'shared/ReactTypeOfWork';
+
+import {NoWork} from './ReactFiberExpirationTime';
+import {NoContext, AsyncMode, StrictMode} from './ReactTypeOfMode';
+
 export type Fiber = {|
   tag: TypeOfWork,
   key: null | string,
@@ -28,9 +36,46 @@ export type Fiber = {|
   lastEffect: Fiber | null,
   expirationTime: ExpirationTime,
   alternate: Fiber | null,
-
-  _debugID?: number,
-  _debugSource?: Source | null,
-  _debugOwner?: Fiber | null,
-  _debugIsCurrentlyTiming?: boolean,
 |};
+
+function FiberNode(
+  tag: TypeOfWork,
+  pendingProps: mixed,
+  key: null | string,
+  mode: TypeOfMode,
+) {
+  this.tag = tag;
+  this.key = key;
+  this.type = null;
+  this.stateNode = null;
+  this.return = null;
+  this.child = null;
+  this.sibling = null;
+  this.index = 0;
+  this.ref = null;
+  this.pendingProps = pendingProps;
+  this.memoizedProps = null;
+  this.updateQueue = null;
+  this.memoizedState = null;
+  this.mode = mode;
+  this.effectTag = NoEffect;
+  this.nextEffect = null;
+  this.firstEffect = null;
+  this.lastEffect = null;
+  this.expirationTime = NoWork;
+  this.alternate = null;
+}
+
+const createFiber = function(
+  tag: TypeOfWork,
+  pendingProps: mixed,
+  key: null | string,
+  mode: TypeOfMode,
+): Fiber {
+  return new FiberNode(tag, pendingProps, key, mode);
+}
+
+export function createHostRootFiber(isAsync: boolean): Fiber {
+  const mode = isAsync ? AsyncMode | StrictMode : NoContext;
+  return createFiber(HostRoot, null, null, mode);
+}

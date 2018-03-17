@@ -6,7 +6,14 @@ import type {ReactNodeList} from 'shared/ReactTypes';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 import {HostComponent} from "shared/ReactTypeOfWork";
 
+import {
+  findCurrentUnmaskedContext,
+  isContextProvider,
+  processChildContext,
+} from './ReactFiberContext';
+import {createFiberRoot} from './ReactFiberRoot';
 import ReactFiberScheduler from './ReactFiberScheduler';
+import {insertUpdateIntoFiber} from './ReactFiberUpdateQueue';
 
 type OpaqueRoot = FiberRoot;
 
@@ -42,6 +49,20 @@ export type Reconciler<C, I, TI> = {
   ): React$Component<any, any> | TI | I | null,
 };
 
+function getContextForSubtree(
+  parentComponent: ?React$Component<any, any>,
+): Object {
+  if (!parentComponent) {
+    return emptyObject;
+  }
+
+  const fiber = ReactInstanceMap.get(parentComponent);
+  const parentContext = findCurrentUnmaskedContext(fiber);
+  return isContextProvider(fiber)
+    ? processChildContext(fiber, parentContext)
+    : parentContext;
+}
+
 export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   config: HostConfig<T, P, I, TI, HI, PI, C, CC, CX, PL>,
 ): Reconciler<C, I, TI> {
@@ -49,6 +70,9 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
   const {
     computeUniqueAsyncExpiration,
+    recalculateCurrentTime,
+    computeExpirationForFiber,
+    scheduleWork,
     flushRoot,
     unbatchedUpdates,
   } = ReactFiberScheduler(config);
